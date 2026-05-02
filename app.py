@@ -1,8 +1,12 @@
 import os
+import re
 from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
+
+# 載入環境變數
+load_dotenv()
 
 from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
@@ -18,9 +22,13 @@ from linebot.v3.webhooks import (
     TextMessageContent
 )
 from services.ai_service import get_ai_response
+from services.stock_service import get_stock_price
+from database import engine, Base, SessionLocal
+from models.user import User
+from models.history import Interaction
 
-# 載入環境變數
-load_dotenv()
+# 初始化資料庫
+Base.metadata.create_all(bind=engine)
 
 # 初始化 FastAPI
 app = FastAPI(title="Stock LINE Bot")
@@ -86,9 +94,40 @@ def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
         user_text = event.message.text
+        user_id = event.source.user_id
         
-        # 呼叫 Gemini AI 取得回覆
-        reply_text = get_ai_response(user_text)
+        db = SessionLocal()
+        try:
+            # 1. 確保使用者存在於資料庫
+            user = db.query(User).filter(User.line_user_id == user_id).first()
+            if not user:
+                user = User(line_user_id=user_id)
+                db.add(user)
+                db.commit()
+                
+            # 2. 判斷是否為股價查詢 (使用正則尋找 4 碼數字)
+            stock_match = re.search(r'\b\d{4}\b', user_text)
+            
+            if stock_match:
+                stock_id = stock_match.group(0)
+                reply_text = get_stock_price(stock_id)
+            else:
+                # 3. 呼叫 Gemini AI 取得回覆
+                reply_text = get_ai_response(user_text)
+                
+            # 4. 紀錄互動歷史
+            interaction = Interaction(
+                line_user_id=user_id,
+                user_input=user_text,
+                bot_reply=reply_text
+            )
+            db.add(interaction)
+            db.commit()
+        except Exception as e:
+            print(f"處理訊息時發生錯誤: {e}")
+            reply_text = "系統處理時發生錯誤，請稍後再試。"
+        finally:
+            db.close()
         
         # 呼叫 Reply API 回覆使用者
         line_bot_api.reply_message_with_http_info(

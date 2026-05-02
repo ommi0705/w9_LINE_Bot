@@ -1,19 +1,16 @@
 import os
 import google.generativeai as genai
 
-# 初始化 Gemini API
-api_key = os.getenv("GEMINI_API_KEY")
-if api_key and api_key != "your_gemini_api_key_here":
-    genai.configure(api_key=api_key)
-
 def get_ai_response(user_message: str) -> str:
     """
     呼叫 Gemini API 根據使用者的輸入產生回覆
     """
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or api_key == "your_gemini_api_key_here":
         return "系統提示：目前尚未設定 GEMINI_API_KEY，請先在 .env 中填寫您的 API 金鑰以便啟用 AI 功能。"
         
     try:
+        genai.configure(api_key=api_key)
         # 使用 Gemini Flash 模型，適合快速問答
         model = genai.GenerativeModel("gemini-2.5-flash")
         

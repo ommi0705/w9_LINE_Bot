@@ -17,6 +17,7 @@ from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent
 )
+from services.ai_service import get_ai_response
 
 # 載入環境變數
 load_dotenv()
@@ -86,9 +87,8 @@ def handle_message(event):
         line_bot_api = MessagingApi(api_client)
         user_text = event.message.text
         
-        # TODO: 整合 stock_service (股價查詢) 與 ai_service (新聞摘要/問答)
-        # 這裡先做基本的 Echo 測試
-        reply_text = f"您輸入了：{user_text}\n(這是一個測試回覆，更多功能建構中...)"
+        # 呼叫 Gemini AI 取得回覆
+        reply_text = get_ai_response(user_text)
         
         # 呼叫 Reply API 回覆使用者
         line_bot_api.reply_message_with_http_info(

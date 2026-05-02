@@ -1,7 +1,7 @@
 import os
 import google.generativeai as genai
 
-def get_ai_response(user_message: str) -> str:
+def get_ai_response(user_message: str, history_msgs: list = None) -> str:
     """
     呼叫 Gemini API 根據使用者的輸入產生回覆
     """
@@ -14,6 +14,17 @@ def get_ai_response(user_message: str) -> str:
         # 使用 Gemini Flash 模型，適合快速問答
         model = genai.GenerativeModel("gemini-2.5-flash")
         
+        # 轉換歷史紀錄給 Gemini
+        gemini_history = []
+        if history_msgs:
+            for msg in history_msgs:
+                if msg.user_input and msg.bot_reply:
+                    gemini_history.append({"role": "user", "parts": [msg.user_input]})
+                    gemini_history.append({"role": "model", "parts": [msg.bot_reply]})
+                    
+        # 啟動帶有記憶的對話
+        chat_session = model.start_chat(history=gemini_history)
+        
         # 設定 System Prompt 讓它扮演財經小幫手
         prompt = f"""
 你是一個專業且友善的「股票投資小幫手」。
@@ -22,7 +33,7 @@ def get_ai_response(user_message: str) -> str:
 使用者的問題：
 {user_message}
 """
-        response = model.generate_content(prompt)
+        response = chat_session.send_message(prompt)
         return response.text.strip()
     except Exception as e:
         print(f"Gemini API 發生錯誤: {e}")

@@ -105,15 +105,21 @@ def handle_message(event):
                 db.add(user)
                 db.commit()
                 
-            # 2. 判斷是否為股價查詢 (使用正則尋找 4 碼數字)
-            stock_match = re.search(r'\b\d{4}\b', user_text)
+            # 2. 判斷是否為股價查詢 (使用正則尋找獨立的 4 碼數字)
+            stock_match = re.search(r'(?<!\d)\d{4}(?!\d)', user_text)
             
             if stock_match:
                 stock_id = stock_match.group(0)
                 reply_text = get_stock_price(stock_id)
             else:
                 # 3. 呼叫 Gemini AI 取得回覆
-                reply_text = get_ai_response(user_text)
+                # 取出該使用者最近的 5 筆歷史對話作為記憶
+                recent_interactions = db.query(Interaction).filter(
+                    Interaction.line_user_id == user_id
+                ).order_by(Interaction.created_at.desc()).limit(5).all()
+                recent_interactions.reverse()  # 反轉順序讓舊對話排在前面
+                
+                reply_text = get_ai_response(user_text, recent_interactions)
                 
             # 4. 紀錄互動歷史
             interaction = Interaction(

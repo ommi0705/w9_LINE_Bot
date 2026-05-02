@@ -1,4 +1,4 @@
-# 作業：設計 Skill + 打造 AI 聊天機器人
+# W11 作業：股票 LINE Bot
 
 > **繳交方式**：將你的 GitHub repo 網址貼到作業繳交區
 > **作業性質**：個人作業
@@ -7,89 +7,66 @@
 
 ## 作業目標
 
-使用 Antigravity Skill 引導 AI，完成一個具備前後端的 AI 聊天機器人。
-重點不只是「讓程式跑起來」，而是透過設計 Skill，學會用結構化的方式與 AI 協作開發。
+利用上週設計的 Skill，開發一個股票相關的 LINE Bot。
+重點不是功能多寡，而是你設計的 **Skill 品質**——Skill 寫得越具體，AI 產出的程式碼就越接近可以直接執行。
+
+---
+
+## 功能要求（擇一實作）
+
+| 功能 | 說明 |
+| --- | --- |
+| AI 分析股票 | 使用者說股票名稱，Gemini 給出分析 |
+| 追蹤清單 | 儲存使用者的自選股清單到 SQLite |
+| 查詢即時價格 | 整合 yfinance 或 twstock 取得股價 |
+
+> 以「可以執行、能回覆訊息」為目標，不需要複雜
 
 ---
 
 ## 繳交項目
 
-你的 GitHub repo 需要包含以下內容：
+你的 GitHub repo 需要包含：
 
-### 1. Skill 設計（`.agents/skills/`）
+| 項目 | 說明 |
+| --- | --- |
+| `app.py` | LINE Webhook + Gemini + SQLite 後端 |
+| `requirements.txt` | 所有套件 |
+| `.env.example` | 環境變數範本（不含真實 token） |
+| `.agents/skills/` | 至少包含 `/linebot-implement` Skill |
+| `README.md` | 本檔案（含心得報告） |
+| `screenshots/chat.png` | LINE Bot 對話截圖（至少一輪完整對話） |
 
-為以下五個開發階段＋提交方式各設計一個 SKILL.md：
+### Skill 要求
 
-| 資料夾名稱        | 對應指令          | 說明                                                                           |
-| ----------------- | ----------------- | ------------------------------------------------------------------------------ |
-| `prd/`          | `/prd`          | 產出 `docs/PRD.md`                                                           |
-| `architecture/` | `/architecture` | 產出 `docs/ARCHITECTURE.md`                                                  |
-| `models/`       | `/models`       | 產出 `docs/MODELS.md`                                                        |
-| `implement/`    | `/implement`    | 產出程式碼（**需指定**：HTML 前端 + FastAPI + SQLite 後端）              |
-| `test/`         | `/test`         | 產出手動測試清單                                                               |
-| `commit/`       | `/commit`       | 自動 commit + push（**需指定**：使用者與 email 使用 Antigravity 預設值） |
+`.agents/skills/` 至少需要包含：
 
-### 2. 開發文件（`docs/`）
-
-用你設計的 Skill 產出的文件，需包含：
-
-- `docs/PRD.md`
-- `docs/ARCHITECTURE.md`
-- `docs/MODELS.md`
-
-### 3. 程式碼
-
-一個可執行的 AI 聊天機器人，需支援以下功能：
-
-| 功能           | 說明                                       | 是否完成 |
-| -------------- | ------------------------------------------ | -------- |
-| 對話狀態管理   | 支援多聊天室（session），維持上下文        | O      |
-| 訊息系統       | 訊息結構包含 role、content、timestamp      | O        |
-| 對話歷史管理   | 可顯示並切換過去的對話紀錄                 | O        |
-| 上傳圖片或文件 | 支援使用者上傳檔案作為對話內容             | O        |
-| 回答控制       | 提供重新生成（regenerate）或中止回應的功能 | O        |
-| 記憶機制       | 儲存使用者偏好，實現跨對話持續性           | O        |
-| 工具整合       | 串接外部 API，使聊天機器人具備實際操作能力 | O        |
-
-### 4. 系統截圖（`screenshots/`）
-
-在 `screenshots/` 資料夾放入以下截圖：
-
-- `chat.png`：聊天機器人主畫面，**需包含至少一輪完整的對話**
-- `history.png`：對話歷史或多 session 切換的畫面
-
-### 5. 心得報告（本 README.md 下方）
-
-在本 README 的**心得報告**區填寫。
+- `/linebot-implement`：產出 LINE Bot 主程式（必要）
+- `/prd` 或 `/architecture`：延用上週的
+- `/commit`：延用上週的
 
 ---
 
-## 專案結構範例
+## 專案結構
 
 ```
 your-repo/
 ├── .agents/
 │   └── skills/
 │       ├── prd/SKILL.md
-│       ├── architecture/SKILL.md
-│       ├── models/SKILL.md
-│       ├── implement/SKILL.md
-│       ├── test/SKILL.md
+│       ├── linebot-implement/SKILL.md
 │       └── commit/SKILL.md
 ├── docs/
-│   ├── PRD.md
-│   ├── ARCHITECTURE.md
-│   └── MODELS.md
-├── templates/
-│   └── index.html
+│   └── PRD.md
 ├── screenshots/
-│   ├── chat.png
-│   ├── history.png
+│   └── chat.png
 ├── app.py
 ├── requirements.txt
 ├── .env.example
-└── README.md          ← 本檔案（含心得報告）
+└── README.md
 ```
+
+> `.env` 和 `users.db` 不要 commit（加入 `.gitignore`）
 
 ---
 
@@ -105,32 +82,48 @@ pip install -r requirements.txt
 
 # 3. 設定環境變數
 cp .env.example .env
-# 編輯 .env，填入 GEMINI_API_KEY
+# 編輯 .env，填入三個 token
 
-# 4. 啟動伺服器
+# 4. 啟動 FastAPI
 uvicorn app:app --reload
-# 開啟瀏覽器：http://localhost:8000
+
+# 5. 另開終端機啟動 ngrok
+ngrok http 8000
+# 複製 https 網址，填入 LINE Developers Console 的 Webhook URL（加上 /callback）
+# 點「Verify」確認連線正常後，掃 QR Code 加好友開始測試
 ```
 
 ---
 
 ## 心得報告
 
-**姓名**：姚谷伝
-**學號**：D1109866
+**姓名**：
+**學號**：
 
-### 問題與反思
+**Q1. 你在 `/linebot-implement` Skill 的「注意事項」寫了哪些規則？為什麼這樣寫？**
 
-**Q1. 你設計的哪一個 Skill 效果最好？為什麼？哪一個效果最差？你認為原因是什麼？**
-
-> **效果最好的是 `implement`。**因為透過事先定義好明確的前後端技術棧（FastAPI + SQLite + 原生 HTML/JS）以及資料夾結構要求，AI 能夠非常精準地遵守規範產出程式碼，免去以往反覆修正專案框架的痛苦。
-> 
-> **效果最差的是 `prd`。**因為產品需求初期通常具備高度的「模糊性」，如果一開始給的條件過於空泛，AI 會自己腦補出太多不必要的延伸功能，反而造成了過度設計 (Over-engineering) 與範圍蔓延 (Scope Creep) 的問題。
+> 1. **強制使用 LINE Bot SDK v3**：因為 v2 與 v3 在 `ApiClient` 與 `MessagingApi` 的寫法差異極大，若不特別規定，AI 容易混用舊語法導致報錯。
+> 2. **要求使用 FastAPI `BackgroundTasks` 處理耗時任務**：因為 LINE 官方嚴格要求 Webhook 必須在 1 秒內回覆 HTTP 200 OK，如果直接在請求中等待呼叫 Gemini AI 完成，一定會發生逾時 (Timeout) 並引發不斷重試的問題。
+> 3. **敏感資訊與環境變數隔離**：要求絕對不能把 Token 寫死在程式碼中，養成安全良好的開發習慣。
 
 ---
 
-**Q2. 在用 AI 產生程式碼的過程中，你遇到什麼問題是 AI 沒辦法自己解決、需要你介入處理的？**
+**Q2. 你的 Skill 第一次執行後，AI 產出的程式直接能跑嗎？需要修改哪些地方？修改後有沒有更新 Skill？**
 
-> 1. **複雜的非同步與狀態管理**：例如利用 SSE (Server-Sent Events) 實作生成中斷控制時，前端的按鈕狀態切換與後端的 WebSocket 斷開關聯容易有落差，需要親自介入去調整 Event Loop 的跳出邏輯。
-> 2. **隱含的套件相依性問題**：AI 給的 `requirements.txt` 有時不全面，像是使用 UploadFile 時，AI 有時會忘記提醒需要安裝 `python-multipart`，導致伺服器啟動出錯。
-> 3. **「工具整合」的實用性判斷差**：AI 雖然能寫出工具串接的邏輯，但它常常不懂得判斷呼叫時機（例如遇到每個問題都硬要去 Query DB 一次），所以必須人工手寫 System Prompt 嚴格限縮它的呼叫條件。
+> 大致上直接能跑，API 結構與 SDK 呼叫都完全正確，但「業務邏輯的細節」還是出了點狀況。
+> 例如：在判斷使用者是不是要查股票時，AI 寫的正則表達式 `\b\d{4}\b` 在英文環境沒問題，但在中文環境下，因為中文字（如「詢」）也被算作 `\w`，導致輸入「查詢2330」會因為中間沒有空格而判定失敗。後來手動請 AI 改成 `(?<!\d)\d{4}(?!\d)` 才解決。
+> 這個經驗讓我學到，後續可以在 Skill 中特別加上：「處理中文 NLP 或是正規表達式時，請特別注意中文詞彙邊界（Word Boundary）的問題」。
+
+---
+
+**Q3. 你遇到什麼問題是 AI 沒辦法自己解決、需要你介入處理的？**
+
+> 最大的問題是「舊有環境遺留物造成的衝突」。因為先前的專案遺留了一個舊的 `chatbot.db` 檔案，當這次換成 LINE Bot 新架構要建立新的 `users` 資料表（需要 `line_user_id` 欄位）時，SQLAlchemy 發生了衝突與報錯。AI 可以分析出錯誤原因，但這種「砍掉重練舊檔案」的行為，還是需要人類介入判斷並下達指令把舊的檔案刪除，才能讓伺服器順利重建資料庫。
+
+---
+
+**Q4. 如果你要把這個 LINE Bot 讓朋友使用，你還需要做什麼？**
+
+> 1. **雲端部署**：目前是透過本機 + ngrok 執行，我需要把專案部署到 Render、Heroku 或 GCP 等雲端主機，讓它 24 小時都能運作。
+> 2. **錯誤處理與 Rate Limit**：需要加入 API 的流量控制與更好的 Try-Catch 錯誤提示。如果朋友瘋狂打字，可能會把 Gemini API 的免費額度用完。
+> 3. **LINE 官方帳號設定**：目前可能是開發者模式，需要到 LINE Official Account Manager 將帳號狀態設為公開（或將朋友加入測試群組）。
